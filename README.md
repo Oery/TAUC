@@ -1,5 +1,5 @@
 # Twitch Auto Updates Commands
-Update your commands automatically
+Update your Minecraft related commands automatically
 
 ## Commands Support
 - !pack
