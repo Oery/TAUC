@@ -67,11 +67,7 @@ if "config.json" in os.listdir():
         client = data["client"]
         logs = data["logs"]
         bot = data["bot"]
-        access_token = data["nightbot_token"]
-        nighbot_pack_msg = data["nighbot_pack_msg"]
-        nighbot_ip_msg = data["nighbot_ip_msg"]
 
-    hed = {"Authorization": f"Bearer {access_token}"}
     if bot == "wizebot": 
 
         res = requests.get(f"https://wapi.wizebot.tv/api/custom-data/{API_KEY}/get/server_ip")
@@ -100,9 +96,6 @@ if "config.json" in os.listdir():
                 "client": client,
                 "logs": logs,
                 "bot": bot,
-                "nightbot_token": access_token,
-                "nighbot_pack_msg": nighbot_pack_msg,
-                "nighbot_ip_msg": nighbot_ip_msg
             }
 
             with open("config.json", "w") as f:
@@ -116,13 +109,7 @@ if "config.json" in os.listdir():
             os.system('cls')
             title()
 
-    elif bot == "nightbot": 
-        res = requests.get("https://api.nightbot.tv/1/channel", headers=hed)
-        if res.status_code == 200:
-            print(green + "\n[SUCCÈS] " + ntext + "Token Nightbot chargé !")
-        else:
-            print(error + "\n[ERREUR] " + ntext + "Votre " + fg("orange_1") + "Token Nightbot" + ntext + " n'est plus valide ou votre connexion Internet a un soucis")
-
+    
 
 else:
     os.system("cls")
@@ -130,62 +117,27 @@ else:
     while True:
         print(f"{p}[INFO] {ntext}Veuillez indiquer votre " + fg("orange_1") + "Clé d'authentification API [RW] (Lecture / Écriture)" + ntext + "")
 
-        print(f"{p}[INFO] {ntext}Vous pouvez la générer sur " + fg("light_blue") + " https://panel.wizebot.tv/development_api_management")
+        API_KEY = input(f"{p}[INFO] {ntext}Vous pouvez la générer sur " + fg("light_blue") + " https://panel.wizebot.tv/development_api_management\n" + text + "")
 
-        API_KEY = input(f"{p}[INFO] {ntext}" + "Si vous utilisez Nightbot, tapez simplement Nightbot\n" + text + "")
-
-        if API_KEY.lower() == "nightbot":
-            client_secret = "a755134565457aacb5dabb7846bf3990cad28b3f94f87f6494cfabc22f97976b"
-            client_id = "154a0edf9e03bc865e331395d655b167"
-            authorization_base_url = "https://api.nightbot.tv/oauth2/authorize"
-            token_url = "https://api.nightbot.tv/oauth2/token"
-            redirect_uri = "https://developerslifefor.me"
-            scope = ["channel", "channel_send", "commands"]
-            nighbot = OAuth2Session(client_id, scope=scope, redirect_uri=redirect_uri)
-            authorization_url, state =  nighbot.authorization_url(authorization_base_url)
-            while True:
-                redirect_response = input(f"{p}[INFO] {ntext}" + "Pour donner accès à Nightbot, allez sur ce lien, donnez l'autorisation et copiez l'adresse de la page. " + fg("light_blue") + authorization_url + text + "\n")
-
-                auth = HTTPBasicAuth(client_id, client_secret)
-                try:
-                    token = nighbot.fetch_token(token_url, auth=auth, authorization_response=redirect_response)
-                    break
-                except Exception:
-                    print(error + "\n[ERREUR] " + ntext + "Token Nightbot Invalide")
-                    time.sleep(2)
-                    os.system('cls')
-                    title()
-            access_token = token['access_token']
-            hed = {"Authorization": f"Bearer {access_token}"}
-            print(green + "\n[SUCCÈS] "+ fg("orange_1") + "Token Nightbot" + ntext + " Valide")
-            bot = "nightbot"
+        
+        res = requests.get(f"https://wapi.wizebot.tv/api/custom-data/{API_KEY}/get/server_ip")
+        if res.status_code == 200:
+            print(green + "\n[SUCCÈS] "+ fg("orange_1") + "Clé d'authentification" + ntext + " Valide")
+            bot = "wizebot"
+            access_token = ""
             time.sleep(2)
             break
+        print(error + "\n[ERREUR] " + ntext + "Clé d'authentification Invalide")
+        time.sleep(2)
+        os.system('cls')
+        title()
 
-        else:
-            res = requests.get(f"https://wapi.wizebot.tv/api/custom-data/{API_KEY}/get/server_ip")
-            if res.status_code == 200:
-                print(green + "\n[SUCCÈS] "+ fg("orange_1") + "Clé d'authentification" + ntext + " Valide")
-                bot = "wizebot"
-                access_token = ""
-                time.sleep(2)
-                break
-            print(error + "\n[ERREUR] " + ntext + "Clé d'authentification Invalide")
-            time.sleep(2)
-            os.system('cls')
-            title()
-
-    nighbot_pack_msg = "Resource Pack : "
-    nighbot_ip_msg = "IP du serveur : "
 
     data = {
         "api_key": API_KEY,
         "client": "vanilla",
         "logs": "",
         "bot": bot,
-        "nightbot_token": access_token,
-        "nighbot_pack_msg": "Resource Pack : ",
-        "nighbot_ip_msg": "IP du serveur : "
     }
 
     with open("config.json", "w") as f:
@@ -198,31 +150,6 @@ else:
 
     os.system('cls')
     title()
-
-
-if bot == "nightbot":
-    res = requests.get("https://api.nightbot.tv/1/commands", headers=hed)
-    ip_command_id = ""
-    pack_command_id = ""
-    for command in res.json()["commands"]:
-        if command["name"] == "!ip": ip_command_id = command["_id"]
-        if command["name"] == "!pack": pack_command_id = command["_id"]
-    if ip_command_id == "":
-        data = {
-            "coolDown": 5,
-            "message": "IP du serveur : ",
-            "name": "!ip",
-            "userLevel": ["everyone"] }
-        res = requests.post("https://api.nightbot.tv/1/commands", headers=hed, data=data)
-        ip_command_id = res.json()['command']['_id']
-    if pack_command_id == "":
-        data = {
-            "coolDown": 5,
-            "message": "Pack : ",
-            "name": "!pack",
-            "userLevel": ["everyone"] }
-        res = requests.post("https://api.nightbot.tv/1/commands", headers=hed, data=data)
-        pack_command_id = res.json()['command']['_id']
 
 EnumWindows = ctypes.windll.user32.EnumWindows
 EnumWindowsProc = ctypes.WINFUNCTYPE(ctypes.c_bool, ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int))
@@ -344,40 +271,25 @@ elif client == "vanilla": logs = os.getenv('APPDATA') + "\.minecraft\logs\latest
 def update_command(key, value):
     if key == "server_ip": command = fg("orange_1") + "!ip"
     else: command = fg("orange_1") + "!pack"
-        
-    if bot == "wizebot":
-        res = requests.get(f"https://wapi.wizebot.tv/api/custom-data/{API_KEY}/get/{key}")
-    elif bot == "nightbot":
-        if key == "server_ip": command_id = ip_command_id
-        else: command_id = pack_command_id
-        res = requests.get(f"https://api.nightbot.tv/1/commands/{command_id}", headers=hed)
+
+    res = requests.get(f"https://wapi.wizebot.tv/api/custom-data/{API_KEY}/get/{key}")
+
     if res.status_code == 200:
-        if bot == "wizebot":
-            old_value = res.json()['val']
-            if value != old_value:
-                res = requests.post(f"https://wapi.wizebot.tv/api/custom-data/{API_KEY}/set/{key}/{value}")
-                if res.status_code == 200:
-                    print(p + "[INFO] " + ntext + f"Commande {command}" + ntext + " mise à jour | " + fg("light_red") + old_value + ntext + " -> " + green + value)
-                else:
-                    print(error + "[ERREUR] " + ntext + f"Impossible de mettre à jour la commande {command}")
+        old_value = res.json()['val']
+        if value != old_value:
+            res = requests.post(f"https://wapi.wizebot.tv/api/custom-data/{API_KEY}/set/{key}/{value}")
+            if res.status_code == 200:
+                print(f"{p}[INFO] {ntext}" + f"Commande {command}" + ntext + " mise à jour | " + fg("light_red") + old_value + ntext + " -> " + green + value)
+
             else:
-                print(p + "[INFO] " + ntext + f"Commande {command}" + ntext + " non mise à jour car la valeur était déjà bonne")
-        elif bot == "nightbot":
-            old_value = res.json()["command"]["message"]
-            if nighbot_pack_msg + value != old_value and nighbot_ip_msg + value != old_value:
-                if key == "server_ip":
-                    data = {"message": nighbot_ip_msg + value }
-                    size = len(nighbot_ip_msg)
-                else: 
-                    data = {"message": nighbot_pack_msg + value }
-                    size = len(pack)
-                res = requests.put(f"https://api.nightbot.tv/1/commands/{command_id}", headers=hed, data=data)
-                if res.status_code == 200: print(p + "[INFO] " + ntext + f"Commande {command}" + ntext + " mise à jour | " + fg("light_red") + old_value[size:] + ntext + " -> " + green + value)
-                else: print(error + "[ERREUR] " + ntext + f"Impossible de mettre à jour la commande {command}")
-            else:
-                print(p + "[INFO] " + ntext + f"Commande {command}" + ntext + " non mise à jour car la valeur était déjà bonne")
-    else:     
-        print(error + "[ERREUR] " + ntext + f"Impossible d'obtenir la commande {command}")
+                print(f"{error}[ERREUR] {ntext}" + f"Impossible de mettre à jour la commande {command}")
+
+        else:
+            print(f"{p}[INFO] {ntext}" + f"Commande {command}" + ntext + " non mise à jour car la valeur était déjà bonne")
+
+
+    else: 
+        print(f"{error}[ERREUR] {ntext}" + f"Impossible d'obtenir la commande {command}")
 
 server_ip = ""
 pack = ""
@@ -397,15 +309,12 @@ with open(logs, 'r') as f:
                 packs = pack.split(',')
                 parsed_packs = []
                 for pack in packs:
-                    if pack.endswith('.zip'):
-                        pack = pack[:-4]
-
                     pack = re.sub("[§].", "", pack)
-
-                    if pack.startswith('!'):
-                        pack = pack[1:]
-
                     pack = " ".join(pack.split())
+
+                    pack = pack.removeprefix("!")
+                    pack = pack.removesuffix('.zip')
+
                     if pack not in ["textures", "Default"]:
                         parsed_packs.append(pack)
                 pack = ", ".join(parsed_packs)
@@ -433,15 +342,11 @@ for line in tailer.follow(open(logs)):
             parsed_packs = []
             for pack in packs:
                 pack = re.sub("[§].", "", pack)
-
-                if pack.startswith('!'):
-                    pack = pack[1:]
-
                 pack = " ".join(pack.split())
 
-                if pack.endswith('.zip'):
-                    pack = pack[:-4]
-                    
+                pack = pack.removeprefix("!")
+                pack = pack.removesuffix('.zip')
+
                 if pack not in ["textures", "Default"]:
                     parsed_packs.append(pack)
             pack = ", ".join(parsed_packs)
