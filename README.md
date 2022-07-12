@@ -7,7 +7,6 @@ Update your Minecraft related commands automatically
 
 ## Bots Support
 - Wizebot
-- Nightbot
 
 ## How to use
 - Launch your game
