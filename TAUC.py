@@ -125,10 +125,31 @@ def get_logs_from_client(client):
         return None
 
 
-def get_logs_from_user():
+def get_client_from_user(logs=None):
+    while True:
+        client = input(f"{p}[INFO] {ntext}Quel client utilisez-vous ?" + fg("orange_1") + " Lunar " + ntext + "|" + fg("orange_1") + " Badlion " + ntext + "|" + fg("orange_1") + " Vanilla " + ntext + "|" + fg("orange_1") + " Custom\n" + text + "").lower()
 
-    res = "non"
+        if client not in ["lunar", "badlion", "vanilla", "custom"]:
+            print(error + "\n[ERREUR] " + ntext + "Client Invalide")
+            time.sleep(2)
+            os.system('cls')
+            title()
+            continue
 
+        if client == "lunar":
+            ver = input(f"{p}[INFO] {ntext}Quel version de Lunar utilisez-vous ?" + fg("orange_1") + " 1.7 " + ntext + "|" + fg("orange_1") + " 1.8 " + ntext + "|" + fg("orange_1") + " 1.12 " + ntext + "|" + fg("orange_1") + " 1.16 " + ntext + "|" + fg("orange_1") + " 1.17 " + ntext + "|" + fg("orange_1") + " 1.18.1 " + ntext + "|" + fg("orange_1") + " 1.18.2\n" + text + "")
+
+            client = f"lunar {ver}"
+
+        elif client == "custom":
+            logs = input(f"{p}[INFO] {ntext}" + "Veuillez indiquer l'emplacement du latest.log de votre Client\n" + text + "")
+
+        print(green + "\n[SUCCÈS] " + ntext + "Client selectionné")
+        time.sleep(1)
+        return client, logs
+
+
+def get_logs_from_user(res="non"):
     try:
         with open("config.json", 'r') as f:
             data = json.load(f)
@@ -150,29 +171,7 @@ def get_logs_from_user():
     if res == 'oui':
         return logs if logs is not None else get_logs_from_client(client)
 
-    logs = None
-
-    while True:
-        client = input(f"{p}[INFO] {ntext}Quel client utilisez-vous ?" + fg("orange_1") + " Lunar " + ntext + "|" + fg("orange_1") + " Badlion " + ntext + "|" + fg("orange_1") + " Vanilla " + ntext + "|" + fg("orange_1") + " Custom\n" + text + "").lower()
-
-        if client not in ["lunar", "badlion", "vanilla", "custom"]:
-            print(error + "\n[ERREUR] " + ntext + "Client Invalide")
-            time.sleep(2)
-            os.system('cls')
-            title()
-            continue
-
-        if client == "lunar":
-            ver = input(f"{p}[INFO] {ntext}Quel version de Lunar utilisez-vous ?" + fg("orange_1") + " 1.7 " + ntext + "|" + fg("orange_1") + " 1.8 " + ntext + "|" + fg("orange_1") + " 1.12 " + ntext + "|" + fg("orange_1") + " 1.16 " + ntext + "|" + fg("orange_1") + " 1.17 " + ntext + "|" + fg("orange_1") + " 1.18.1 " + ntext + "|" + fg("orange_1") + " 1.18.2\n" + text + "")
-
-            client = f"lunar {ver}"
-
-        elif client == "custom":
-            logs = input(f"{p}[INFO] {ntext}" + "Veuillez indiquer l'emplacement du latest.log de votre Client\n" + text + "")
-
-        print(green + "\n[SUCCÈS] " + ntext + "Client selectionné")
-        time.sleep(2)
-        break
+    client, logs = get_client_from_user()
 
     if logs is None:
         logs = get_logs_from_client(client)
