@@ -8,28 +8,6 @@ import time
 import ctypes
 from colored import fg
 
-version = "0.6"
-ctypes.windll.kernel32.SetConsoleTitleW(f"TAUC v{version} | By Oery")
-
-os.system('cls')
-
-server_connect = [
-    " [Client thread/INFO]: Connecting to ",
-    " [Render thread/INFO]: Connecting to ",
-    " [Client thread/INFO]: Worker done, connecting to ",
-    " [Render thread/INFO]: Worker done, connecting to "
-]
-
-rp_loading = [
-    " [Client thread/INFO]: [OptiFine] Resource packs: ",
-    " [Render thread/INFO]: Reloading ResourceManager: ",
-]
-
-p = fg("magenta_2a")
-ntext = fg("white")
-text = fg("light_yellow")
-error = fg("light_red")
-green = fg('light_green')
 
 def title():
     print("")
@@ -105,20 +83,14 @@ def get_mc_window():
     EnumWindows(EnumWindowsProc(foreach_window), 0)
 
     for x in titles:
-        print(x)
         if x.startswith("Lunar Client (") and x.endswith(")"):
             ver = x.split()[-1][1:-13] if "dev" in x else x.split()[-1][1:-16]
 
-            if  ver == "1.7.10": ver = "1.7"
-            elif ver == "1.12.2": ver = "1.12"
-            elif ver == "1.16.5": ver = "1.16"
-            elif ver == "1.17.1": ver = "1.17"
-            elif "1.18.1" in ver: ver = "1.18.1"
-            elif "1.18.2" in ver: ver = "1.18.2"
-            elif "1.19" in ver: ver = "1.19"
-            
             if "dev" in x:
-                ver = "ichor"
+                return 'lunar ichor'
+
+            if ver in {"1.7.10": "1.7", "1.12.2": "1.12", "1.17.1": "1.17"}:
+                ver = {"1.7.10": "1.7", "1.12.2": "1.12", "1.17.1": "1.17"}[ver]
 
             return f"lunar {ver}"
 
@@ -138,6 +110,7 @@ def get_logs_from_client(client):
         return None
 
     print(f"{green}[SUCCÈS] {ntext}Client détecté : " + fg("orange_1") + client.capitalize())
+    time.sleep(1)
 
     if "lunar" in client:
         return f"{os.getenv('USERPROFILE')}\.lunarclient\offline\{client.split()[-1]}\logs\latest.log"
@@ -275,25 +248,38 @@ def parse_resource_packs(line):
 
     return ", ".join(parsed_packs)
 
+version = "0.6"
 
+server_connect = [
+    " [Client thread/INFO]: Connecting to ",
+    " [Render thread/INFO]: Connecting to ",
+    " [Client thread/INFO]: Worker done, connecting to ",
+    " [Render thread/INFO]: Worker done, connecting to "
+]
+
+rp_loading = [
+    " [Client thread/INFO]: [OptiFine] Resource packs: ",
+    " [Render thread/INFO]: Reloading ResourceManager: ",
+]
+
+alias = {
+        "production.spectrum.moonsworth.cloud": "lunar.gg",
+        "tcpshield.craftok.fr": "craftok.fr",
+        "_dc-srv.5aca351ce790._minecraft._tcp.hyriode.fr": "hyriode.fr"
+    }
+
+p = fg("magenta_2a")
+ntext = fg("white")
+text = fg("light_yellow")
+error = fg("light_red")
+green = fg('light_green')
+
+ctypes.windll.kernel32.SetConsoleTitleW(f"TAUC v{version} | By Oery")
+
+os.system('cls')
 title()
 
-alias = {}
-
-if "alias.txt" in os.listdir():
-    with open("alias.txt", "r", encoding='utf-8') as f:
-        for line in f.readlines():
-
-            if not line.startswith("#") and len(line) > 1:
-
-                if line.endswith("\n"):
-                    line = line[:-1]
-
-                words = line.split()
-                alias[words[0]] = line[len(words[0])+1:]
-
-else:
-    
+if "alias.txt" not in os.listdir():
     with open("alias.txt", "w", encoding='utf-8') as f:
         f.write("\n\n")
         f.write("# Les Alias permettent de remplacer le texte que l'app détecte par un autre texte.\n# Ils sont utiles si vous ne voulez pas leak l'IP d'un serveur privé\n# ou si l'IP d'un serveur ne correspond pas à celle rentrée dans le menu multijoueur\n\n")
@@ -301,11 +287,18 @@ else:
         f.write("################# EXAMPLES ##################\nmc.serveur.privé Serveur Privé\nadressebadlongue.serveur.fr serveur.fr\nmc.serveur.privé mc.serveur.privé (Whitelist ON)\n\n")
         f.write("################## CUSTOM ###################\n")
 
-    alias = {
-        "production.spectrum.moonsworth.cloud": "lunar.gg",
-        "tcpshield.craftok.fr": "craftok.fr",
-        "_dc-srv.5aca351ce790._minecraft._tcp.hyriode.fr": "hyriode.fr"
-    }
+with open("alias.txt", "r", encoding='utf-8') as f:
+    alias = {}
+
+    for line in f.readlines():
+
+        if not line.startswith("#") and len(line) > 1:
+
+            if line.endswith("\n"):
+                line = line[:-1]
+
+            words = line.split()
+            alias[words[0]] = line[len(words[0])+1:]
 
 if "config.json" not in os.listdir():
     get_api_key()
@@ -330,9 +323,6 @@ logs = get_logs_from_client(client)
 
 if logs is None:
     logs = get_logs_from_user()
-
-os.system("cls")
-title()
 
 print(f"{p}[INFO] {ntext}Le script est désormais actif")
 
@@ -371,3 +361,4 @@ for line in tailer.follow(open(logs)):
         pack = parse_resource_packs(line)
 
         update_command(("pack", "!pack"), pack)
+
