@@ -11,8 +11,8 @@ Update your Minecraft related commands automatically
 ## How to use
 - Launch your game
 - Execute TAUC
-- Enter your latest.log file location if not detected
 - Enter your API Key
+- Enter your latest.log file location if not detected
 
 ## Soon
 - Real GUI
