@@ -7,13 +7,23 @@ import os
 import time
 import ctypes
 from colored import fg
-from requests_oauthlib import OAuth2Session
-from requests.auth import HTTPBasicAuth
 
-version = "0.5"
+version = "0.6"
 ctypes.windll.kernel32.SetConsoleTitleW(f"TAUC v{version} | By Oery")
 
 os.system('cls')
+
+server_connect = [
+    " [Client thread/INFO]: Connecting to ",
+    " [Render thread/INFO]: Connecting to ",
+    " [Client thread/INFO]: Worker done, connecting to ",
+    " [Render thread/INFO]: Worker done, connecting to "
+]
+
+rp_loading = [
+    " [Client thread/INFO]: [OptiFine] Resource packs: ",
+    " [Render thread/INFO]: Reloading ResourceManager: ",
+]
 
 p = fg("magenta_2a")
 ntext = fg("white")
@@ -74,7 +84,7 @@ def get_api_key(client="vanilla", logs=""):
     os.system('cls')
     title()
 
-
+    
 def get_mc_window():
     EnumWindows = ctypes.windll.user32.EnumWindows
     EnumWindowsProc = ctypes.WINFUNCTYPE(ctypes.c_bool, ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int))
@@ -83,9 +93,7 @@ def get_mc_window():
     IsWindowVisible = ctypes.windll.user32.IsWindowVisible
     titles = []
 
-
     def foreach_window(hwnd, lParam):
-
         if IsWindowVisible(hwnd):
             length = GetWindowTextLength(hwnd)
             buff = ctypes.create_unicode_buffer(length + 1)
@@ -94,14 +102,11 @@ def get_mc_window():
 
         return True
 
-
     EnumWindows(EnumWindowsProc(foreach_window), 0)
 
-    client = None
     for x in titles:
+        print(x)
         if x.startswith("Lunar Client (") and x.endswith(")"):
-            print(x)
-
             ver = x.split()[-1][1:-13] if "dev" in x else x.split()[-1][1:-16]
 
             if  ver == "1.7.10": ver = "1.7"
@@ -111,15 +116,19 @@ def get_mc_window():
             elif "1.18.1" in ver: ver = "1.18.1"
             elif "1.18.2" in ver: ver = "1.18.2"
             elif "1.19" in ver: ver = "1.19"
-            client = f"lunar {ver}"
-
+            
             if "dev" in x:
                 ver = "ichor"
 
-        elif x.startswith("Badlion Minecraft Client v"): client = "badlion"
-        elif x.startswith("Minecraft"): client = "vanilla"
+            return f"lunar {ver}"
 
-        return client
+        elif x.startswith("Badlion Minecraft Client v"):
+            return "badlion"
+
+        elif x.startswith("Minecraft"):
+            return "vanilla"
+
+    return None
 
 
 def get_logs_from_client(client):
@@ -131,15 +140,16 @@ def get_logs_from_client(client):
     print(f"{green}[SUCCÈS] {ntext}Client détecté : " + fg("orange_1") + client.capitalize())
 
     if "lunar" in client:
-        logs = f"{os.getenv('USERPROFILE')}\.lunarclient\offline\{client.split()[-1]}\logs\latest.log"
+        return f"{os.getenv('USERPROFILE')}\.lunarclient\offline\{client.split()[-1]}\logs\latest.log"
 
     elif client == "badlion":
-        logs = f"{os.getenv('APPDATA')}\.minecraft\logs\blclient\minecraft\latest.log"
+        return f"{os.getenv('APPDATA')}\.minecraft\logs\blclient\minecraft\latest.log"
 
     elif client == "vanilla":
-        logs = f"{os.getenv('APPDATA')}\.minecraft\logs\latest.log"
+        return f"{os.getenv('APPDATA')}\.minecraft\logs\latest.log"
 
-    return logs
+    else:
+        return None
 
 
 def get_logs_from_user():
@@ -206,7 +216,7 @@ def get_command(key):
     res = requests.get(f"https://wapi.wizebot.tv/api/custom-data/{API_KEY}/get/{key[0]}")
 
     if res.status_code != 200:
-        print(f"{error}[ERREUR] {ntext}Impossible d'obtenir la commande " + fg('orange_1') + {key[1]})
+        print(f"{error}[ERREUR] {ntext}Impossible d'obtenir la commande " + fg('orange_1') + key[1])
 
         return None
 
@@ -217,28 +227,63 @@ def edit_command(key, value):
     res = requests.post(f"https://wapi.wizebot.tv/api/custom-data/{API_KEY}/set/{key[0]}/{value}")
 
     if res.status_code != 200:
-        print(f"{error}[ERREUR] {ntext}Impossible de mettre à jour la commande " + fg('orange_1') + {key[1]})
-
+        print(f"{error}[ERREUR] {ntext}Impossible de mettre à jour la commande " + fg('orange_1') + key[1])
         return
 
-    print(f"{p}[INFO] {ntext}Commande " + fg('orange_1') + {key[1]} + ntext + " mise à jour | " + fg("light_red") + value + ntext + " -> " + green + value)
+    print(f"{p}[INFO] {ntext}Commande " + fg('orange_1') + key[1] + ntext + " mise à jour | " + green + value)
 
 
 def update_command(key, value):
 
     if value == get_command(key):
-        print(f"{p}[INFO] {ntext}Commande " + fg('orange_1') + {key[1]} + ntext + " non mise à jour car la valeur était déjà bonne")
+        print(f"{p}[INFO] {ntext}Commande " + fg('orange_1') + key[1] + ntext + " non mise à jour car la valeur était déjà bonne")
         return
 
     edit_command(key, value)
 
 
+def parse_server_ip(line):
+    server_ip = line.split()[7][:-1] if client == "badlion" else line.split()[5][:-1]
+
+    if server_ip.endswith('.'):
+        server_ip = server_ip[:-1]
+
+    if server_ip in alias:
+        server_ip = alias[server_ip]
+
+    return server_ip
+
+
+def parse_resource_packs(line):
+    pack = line[60:]
+
+    if pack == "Default":
+        return 'Aucun'
+
+    packs = pack.split(',')
+    parsed_packs = []
+
+    for pack in packs:
+        pack = re.sub("[§].", "", pack)
+        pack = " ".join(pack.split())
+
+        pack = pack.removeprefix("!")
+        pack = pack.removesuffix('.zip')
+
+        if pack not in ["textures", "Default"]:
+            parsed_packs.append(pack)
+
+    return ", ".join(parsed_packs)
+
+
 title()
 
 alias = {}
+
 if "alias.txt" in os.listdir():
     with open("alias.txt", "r", encoding='utf-8') as f:
         for line in f.readlines():
+
             if not line.startswith("#") and len(line) > 1:
 
                 if line.endswith("\n"):
@@ -248,6 +293,7 @@ if "alias.txt" in os.listdir():
                 alias[words[0]] = line[len(words[0])+1:]
 
 else:
+    
     with open("alias.txt", "w", encoding='utf-8') as f:
         f.write("\n\n")
         f.write("# Les Alias permettent de remplacer le texte que l'app détecte par un autre texte.\n# Ils sont utiles si vous ne voulez pas leak l'IP d'un serveur privé\n# ou si l'IP d'un serveur ne correspond pas à celle rentrée dans le menu multijoueur\n\n")
@@ -277,7 +323,7 @@ if res.status_code != 200:
     time.sleep(1)
     get_api_key(client, logs)
     
-print(green + "\n[SUCCÈS] " + ntext + "Clé d'authentification chargée !")    
+print(green + "\n[SUCCÈS] " + ntext + "Clé d'authentification chargée !")
 
 client = get_mc_window()
 logs = get_logs_from_client(client)
@@ -299,46 +345,11 @@ pack = ""
 with open(logs, 'r') as f:
 
     for line in f.readlines():
-
-        if (" [Client thread/INFO]: Connecting to " in line or " [Render thread/INFO]: Connecting to " in line) and client != "badlion":
-            server_ip = line.split()[5][:-1]
-
-            if server_ip.endswith('.'):
-                server_ip = server_ip[:-1]
-
-            if server_ip in alias:
-                server_ip = alias[server_ip]
-
-        elif (" [Client thread/INFO]: Worker done, connecting to " in line or " [Render thread/INFO]: Worker done, connecting to " in line) and client == "badlion":
-            server_ip = line.split()[7][:-1]
-
-            if server_ip.endswith('.'):
-                server_ip = server_ip[:-1]
-
-            if server_ip in alias:
-                server_ip = alias[server_ip]
-
-        elif " [Client thread/INFO]: [OptiFine] Resource packs: " in line or " [Render thread/INFO]: Reloading ResourceManager: " in line:
-            pack = line[60:]
-
-            if pack == "Default":
-                continue
-
-            packs = pack.split(',')
-            parsed_packs = []
-
-            for pack in packs:
-                pack = re.sub("[§].", "", pack)
-                pack = " ".join(pack.split())
-
-                pack = pack.removeprefix("!")
-                pack = pack.removesuffix('.zip')
-
-                if pack not in ["textures", "Default"]:
-                    parsed_packs.append(pack)
-
-            pack = ", ".join(parsed_packs)
-
+        if any(server_log in line for server_log in server_connect):
+            server_ip = parse_server_ip(line)
+        
+        elif any(rp in line for rp in rp_loading):
+            pack = parse_resource_packs(line)
 
 if server_ip != "":
     update_command(("server_ip", "!ip"), server_ip)
@@ -346,53 +357,17 @@ if server_ip != "":
 else:
     print(f"{p}[INFO] {ntext}Commande " + fg("orange_1") + "!ip" + ntext + " non mise à jour car vous n'êtes pas connecté à un serveur")
 
-
 if pack != "":
     update_command(("pack", "!pack"), pack)
 
 for line in tailer.follow(open(logs)):
-    if (" [Client thread/INFO]: Connecting to " in line or " [Render thread/INFO]: Connecting to " in line) and client != "badlion":
-        server_ip = line.split()[5][:-1]
 
-        if server_ip.endswith('.'):
-            server_ip = server_ip[:-1]
-
-        if server_ip in alias:
-            server_ip = alias[server_ip]
-
+    if any(server_log in line for server_log in server_connect):
+        server_ip = parse_server_ip(line)
+        
         update_command(("server_ip", "!ip"), server_ip)
 
-    elif (" [Client thread/INFO]: Worker done, connecting to " in line or " [Render thread/INFO]: Worker done, connecting to " in line) and client == "badlion":
-        server_ip = line.split()[7][:-1]
-
-        if server_ip.endswith('.'):
-            server_ip = server_ip[:-1]
-
-        if server_ip in alias:
-            server_ip = alias[server_ip]
-
-        update_command(("server_ip", "!ip"), server_ip)
-
-    elif " [Client thread/INFO]: [OptiFine] Resource packs: " in line or " [Render thread/INFO]: Reloading ResourceManager: " in line:
-        pack = line[60:]
-
-        if pack == "Default":
-            continue
-    
-        packs = pack.split(',')
-        parsed_packs = []
-
-        for pack in packs:
-            pack = re.sub("[§].", "", pack)
-            pack = " ".join(pack.split())
-
-            pack = pack.removeprefix("!")
-            pack = pack.removesuffix('.zip')
-
-            if pack not in ["textures", "Default"]:
-                parsed_packs.append(pack)
-
-        pack = ", ".join(parsed_packs)
+    elif any(rp in line for rp in rp_loading):
+        pack = parse_resource_packs(line)
 
         update_command(("pack", "!pack"), pack)
-
