@@ -153,3 +153,5 @@ cython_debug/
 
 #TAUC PyInstaller Script
 compiler.bat
+config.json
+alias.txt
