@@ -119,20 +119,21 @@ else:
 
         API_KEY = input(f"{p}[INFO] {ntext}Vous pouvez la générer sur " + fg("light_blue") + " https://panel.wizebot.tv/development_api_management\n" + text + "")
 
-        
         res = requests.get(f"https://wapi.wizebot.tv/api/custom-data/{API_KEY}/get/server_ip")
-        if res.status_code == 200:
-            print(green + "\n[SUCCÈS] "+ fg("orange_1") + "Clé d'authentification" + ntext + " Valide")
-            bot = "wizebot"
-            access_token = ""
+
+        if res.status_code != 200:
+            print(error + "\n[ERREUR] " + ntext + "Clé d'authentification Invalide")
             time.sleep(2)
-            break
-        print(error + "\n[ERREUR] " + ntext + "Clé d'authentification Invalide")
+            os.system('cls')
+            title()
+            continue
+
+        print(green + "\n[SUCCÈS] "+ fg("orange_1") + "Clé d'authentification" + ntext + " Valide")
+        bot = "wizebot"
+        access_token = ""
         time.sleep(2)
-        os.system('cls')
-        title()
-
-
+        break
+    
     data = {
         "api_key": API_KEY,
         "client": "vanilla",
