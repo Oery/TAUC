@@ -23,7 +23,7 @@ def title():
     print("")
 
 
-def get_api_key(client="vanilla", logs=""):
+def get_api_key(client="", logs=""):
     os.system("cls")
     title()
     
@@ -116,7 +116,7 @@ def get_logs_from_client(client):
         return f"{os.getenv('USERPROFILE')}\.lunarclient\offline\{client.split()[-1]}\logs\latest.log"
 
     elif client == "badlion":
-        return f"{os.getenv('APPDATA')}\.minecraft\logs\blclient\minecraft\latest.log"
+        return os.getenv('APPDATA') + r"\.minecraft\logs\blclient\minecraft\latest.log"
 
     elif client == "vanilla":
         return f"{os.getenv('APPDATA')}\.minecraft\logs\latest.log"
@@ -127,26 +127,30 @@ def get_logs_from_client(client):
 
 def get_logs_from_user():
 
+    res = "non"
+
     try:
         with open("config.json", 'r') as f:
             data = json.load(f)
             client = data["client"]
             logs = data["logs"]
 
-        print(f"{p}[INFO] {ntext}Voulez vous réutilisez vos paramètres précédents ? (" + fg("orange_1") + "Oui" + ntext + "/" + fg("orange_1") + "Non" + ntext + ")")
+        if client != "":
+            print(f"{p}[INFO] {ntext}Voulez vous réutilisez vos paramètres précédents ? (" + fg("orange_1") + "Oui" + ntext + "/" + fg("orange_1") + "Non" + ntext + ")")
 
-        if client == "custom":
-            res = input(f"{p}[INFO] {ntext}Logs : " + fg("orange_1") + logs + text + "\n").lower()
+            if client == "custom":
+                res = input(f"{p}[INFO] {ntext}Logs : " + fg("orange_1") + logs + text + "\n").lower()
 
-        else:
-            res = input(f"{p}[INFO] {ntext}Client : " + fg("orange_1") + client.capitalize() + text + "\n").lower()
+            else:
+                res = input(f"{p}[INFO] {ntext}Client : " + fg("orange_1") + client.capitalize() + text + "\n").lower()
 
     except KeyError:
-        res = "non"
         logs = None
 
     if res == 'oui':
-        return get_logs_from_client(client)
+        return logs if logs is not None else get_logs_from_client(client)
+
+    logs = None
 
     while True:
         client = input(f"{p}[INFO] {ntext}Quel client utilisez-vous ?" + fg("orange_1") + " Lunar " + ntext + "|" + fg("orange_1") + " Badlion " + ntext + "|" + fg("orange_1") + " Vanilla " + ntext + "|" + fg("orange_1") + " Custom\n" + text + "").lower()
@@ -156,6 +160,7 @@ def get_logs_from_user():
             time.sleep(2)
             os.system('cls')
             title()
+            continue
 
         if client == "lunar":
             ver = input(f"{p}[INFO] {ntext}Quel version de Lunar utilisez-vous ?" + fg("orange_1") + " 1.7 " + ntext + "|" + fg("orange_1") + " 1.8 " + ntext + "|" + fg("orange_1") + " 1.12 " + ntext + "|" + fg("orange_1") + " 1.16 " + ntext + "|" + fg("orange_1") + " 1.17 " + ntext + "|" + fg("orange_1") + " 1.18.1 " + ntext + "|" + fg("orange_1") + " 1.18.2\n" + text + "")
@@ -168,19 +173,19 @@ def get_logs_from_user():
         print(green + "\n[SUCCÈS] " + ntext + "Client selectionné")
         time.sleep(2)
         break
-        
+
+    if logs is None:
+        logs = get_logs_from_client(client)
+
     data = {
         "api_key": API_KEY,
         "client": client,
-        "logs": logs
+        "logs": logs if client == "custom" else None
         }
 
     with open("config.json", "w") as f:
         json.dump(data, f, indent=4)
 
-    if logs is None:
-        return get_logs_from_client(client)
-    
     return logs
 
 
