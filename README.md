@@ -18,3 +18,5 @@ Update your Minecraft related commands automatically
 - Real GUI
 - NodeJS rewrite
 - Mac/Linux Support
+- Nightbot Support
+- Auto Bets
